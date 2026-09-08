@@ -6,7 +6,7 @@ pydantic-settings
 sqlalchemy
 psycopg[binary]
 alembic
-passlib[bcrypt]
+bcrypt
 python-jose[cryptography]
 python-multipart
 httpx
