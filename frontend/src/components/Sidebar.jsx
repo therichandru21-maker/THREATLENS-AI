@@ -4,11 +4,14 @@ function Sidebar({
   selectedIncidentId,
   onLogout,
 }) {
+
   function navigate(target) {
+
     if (
       target === "analyzer" &&
       !selectedIncidentId
     ) {
+
       onNavigate("new");
       return;
     }
@@ -16,24 +19,31 @@ function Sidebar({
     onNavigate(target);
   }
 
+
   return (
     <aside className="sidebar">
 
       <div className="brand">
+
         <div className="brand-icon">
           🛡
         </div>
 
+
         <div className="brand-text">
+
           <h1>
-            CyberSentinel
+            ThreatLens AI
           </h1>
 
           <span>
             AI SECURITY PLATFORM
           </span>
+
         </div>
+
       </div>
+
 
       <nav className="navigation">
 
@@ -51,6 +61,7 @@ function Sidebar({
           Dashboard
         </button>
 
+
         <button
           className={
             page === "new"
@@ -64,6 +75,7 @@ function Sidebar({
           <span>＋</span>
           New Incident
         </button>
+
 
         <button
           className={
@@ -79,6 +91,7 @@ function Sidebar({
           AI Analyzer
         </button>
 
+
         <button
           className={
             page === "history"
@@ -92,6 +105,7 @@ function Sidebar({
           <span>◷</span>
           Incident History
         </button>
+
 
         <button
           className={
@@ -109,12 +123,15 @@ function Sidebar({
 
       </nav>
 
+
       <div className="sidebar-bottom">
 
         <div className="security-status">
+
           <span className="status-dot" />
 
           <div>
+
             <strong>
               AI Engine Online
             </strong>
@@ -122,8 +139,11 @@ function Sidebar({
             <small>
               Groq + RAG active
             </small>
+
           </div>
+
         </div>
+
 
         <button
           className="logout-button"
@@ -137,5 +157,6 @@ function Sidebar({
     </aside>
   );
 }
+
 
 export default Sidebar;

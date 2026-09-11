@@ -1,8 +1,14 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+ENV_FILE = BACKEND_DIR / ".env"
+
+
 class Settings(BaseSettings):
-    APP_NAME: str = "CyberSentinel AI"
+    APP_NAME: str = "ThreatLens AI"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 
@@ -17,7 +23,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:5173"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(ENV_FILE),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",

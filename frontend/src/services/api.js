@@ -1,183 +1,271 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://127.0.0.1:8000";
+import axios from "axios";
 
 
-async function request(
-  endpoint,
-  options = {}
-) {
-  const token =
-    localStorage.getItem(
-      "cybersentinel_token"
-    );
-
-  const headers = {
-    ...(options.body instanceof FormData
-      ? {}
-      : {
-          "Content-Type":
-            "application/json",
-        }),
-    ...(token
-      ? {
-          Authorization:
-            `Bearer ${token}`,
-        }
-      : {}),
-    ...(options.headers || {}),
-  };
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ||
+  "http://127.0.0.1:8000"
+).replace(/\/$/, "");
 
 
-  let response;
+const api = axios.create({
+  baseURL: API_BASE_URL,
 
-  try {
-    response = await fetch(
-      `${API_BASE_URL}${endpoint}`,
-      {
-        ...options,
-        headers,
-      }
-    );
-  } catch {
-    throw new Error(
-      "Unable to connect to CyberSentinel backend."
+  headers: {
+    "Content-Type": "application/json",
+  },
+
+  timeout: 30000,
+});
+
+
+// =========================
+// ERROR HANDLER
+// =========================
+
+function getErrorMessage(error, fallback) {
+
+  if (error?.response?.data?.detail) {
+
+    const detail =
+      error.response.data.detail;
+
+    if (typeof detail === "string") {
+      return detail;
+    }
+
+    if (Array.isArray(detail)) {
+      return detail
+        .map(
+          (item) =>
+            item?.msg ||
+            "Invalid request"
+        )
+        .join(", ");
+    }
+  }
+
+
+  if (error?.code === "ERR_NETWORK") {
+    return (
+      `Cannot reach ThreatLens AI backend at ${API_BASE_URL}. ` +
+      "Make sure FastAPI is running on port 8000."
     );
   }
 
 
-  const contentType =
-    response.headers.get(
-      "content-type"
-    ) || "";
-
-
-  const data =
-    contentType.includes(
-      "application/json"
-    )
-      ? await response.json()
-      : null;
-
-
-  if (
-    response.status === 401
-  ) {
-    localStorage.removeItem(
-      "cybersentinel_token"
-    );
-
-    localStorage.removeItem(
-      "cybersentinel_user"
+  if (error?.code === "ECONNABORTED") {
+    return (
+      "The request timed out. Please try again."
     );
   }
 
 
-  if (!response.ok) {
-    throw new Error(
-      data?.detail ||
-        `Request failed with status ${response.status}`
-    );
-  }
-
-
-  return data;
+  return (
+    error?.message ||
+    fallback
+  );
 }
 
 
-// Authentication
+// =========================
+// REQUEST INTERCEPTOR
+// =========================
 
-export async function login(
-  username,
-  password
-) {
-  const body =
-    new URLSearchParams();
+api.interceptors.request.use(
+  (config) => {
 
-  body.append(
-    "username",
-    username
-  );
-
-  body.append(
-    "password",
-    password
-  );
+    const token =
+      localStorage.getItem(
+        "threatlens_token"
+      ) ||
+      localStorage.getItem(
+        "access_token"
+      );
 
 
-  let response;
+    if (token) {
 
-  try {
-    response = await fetch(
-      `${API_BASE_URL}/auth/login`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/x-www-form-urlencoded",
-        },
-        body,
-      }
-    );
-  } catch {
-    throw new Error(
-      "Unable to connect to CyberSentinel backend."
-    );
+      config.headers =
+        config.headers || {};
+
+      config.headers.Authorization =
+        `Bearer ${token}`;
+    }
+
+
+    return config;
+  },
+
+  (error) => {
+    return Promise.reject(error);
   }
+);
 
 
-  const data =
-    await response.json();
+// =========================
+// RESPONSE INTERCEPTOR
+// =========================
 
+api.interceptors.response.use(
 
-  if (!response.ok) {
-    throw new Error(
-      data?.detail ||
-        "Login failed."
-    );
+  (response) => response,
+
+  (error) => {
+
+    if (
+      error?.response?.status === 401
+    ) {
+
+      localStorage.removeItem(
+        "threatlens_token"
+      );
+
+      localStorage.removeItem(
+        "threatlens_user"
+      );
+
+      localStorage.removeItem(
+        "access_token"
+      );
+    }
+
+    return Promise.reject(error);
   }
+);
 
 
-  localStorage.setItem(
-    "cybersentinel_token",
-    data.access_token
-  );
+// =========================
+// AUTH
+// =========================
 
-  localStorage.setItem(
-    "cybersentinel_user",
-    JSON.stringify(data.user)
-  );
-
-
-  return data;
-}
-
-
-export async function register(
+export const register = async (
   username,
   email,
   password
-) {
-  return request(
-    "/auth/register",
-    {
-      method: "POST",
-      body: JSON.stringify({
-        username,
-        email,
-        password,
-      }),
+) => {
+
+  try {
+
+    const response =
+      await api.post(
+        "/auth/register",
+        {
+          username,
+          email,
+          password,
+        }
+      );
+
+    return response.data;
+
+  } catch (error) {
+
+    throw new Error(
+      getErrorMessage(
+        error,
+        "Registration failed."
+      )
+    );
+  }
+};
+
+
+export const login = async (
+  username,
+  password
+) => {
+
+  try {
+
+    const formData =
+      new URLSearchParams();
+
+    formData.append(
+      "username",
+      username
+    );
+
+    formData.append(
+      "password",
+      password
+    );
+
+
+    const response =
+      await api.post(
+        "/auth/login",
+        formData,
+        {
+          headers: {
+            "Content-Type":
+              "application/x-www-form-urlencoded",
+          },
+        }
+      );
+
+
+    const data =
+      response.data;
+
+
+    // Save JWT token
+    if (data?.access_token) {
+
+      localStorage.setItem(
+        "threatlens_token",
+        data.access_token
+      );
     }
+
+
+    // Save logged-in user
+    if (data?.user) {
+
+      localStorage.setItem(
+        "threatlens_user",
+        JSON.stringify(data.user)
+      );
+    }
+
+
+    return data;
+
+  } catch (error) {
+
+    throw new Error(
+      getErrorMessage(
+        error,
+        "Unable to sign in."
+      )
+    );
+  }
+};
+
+
+export const logout = () => {
+
+  localStorage.removeItem(
+    "threatlens_token"
   );
-}
+
+  localStorage.removeItem(
+    "threatlens_user"
+  );
 
 
-export async function getCurrentUser() {
-  return request("/auth/me");
-}
+  // Old keys cleanup
+  localStorage.removeItem(
+    "access_token"
+  );
 
+  localStorage.removeItem(
+    "token"
+  );
 
-export function logout() {
+  localStorage.removeItem(
+    "user"
+  );
+
   localStorage.removeItem(
     "cybersentinel_token"
   );
@@ -185,99 +273,261 @@ export function logout() {
   localStorage.removeItem(
     "cybersentinel_user"
   );
-}
+};
 
 
-// Incidents
+export const isAuthenticated = () => {
 
-export async function getIncidents() {
-  return request(
-    "/incidents/"
-  );
-}
-
-
-export async function getIncident(id) {
-  return request(
-    `/incidents/${id}`
-  );
-}
-
-
-export async function createIncident(
-  data
-) {
-  return request(
-    "/incidents/",
-    {
-      method: "POST",
-      body: JSON.stringify(data),
-    }
-  );
-}
-
-
-export async function analyzeIncident(
-  id
-) {
-  return request(
-    `/incidents/${id}/analyze`,
-    {
-      method: "POST",
-    }
-  );
-}
-
-
-export async function runAgent(id) {
-  return request(
-    `/incidents/${id}/agent-run`,
-    {
-      method: "POST",
-    }
-  );
-}
-
-
-export async function updateIncident(
-  id,
-  data
-) {
-  return request(
-    `/incidents/${id}`,
-    {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }
-  );
-}
-
-
-export async function deleteIncident(
-  id
-) {
-  return request(
-    `/incidents/${id}`,
-    {
-      method: "DELETE",
-    }
-  );
-}
-
-
-// Analytics
-
-export async function getAnalytics() {
-  return request(
-    "/analytics/summary"
-  );
-}
-
-
-export function isAuthenticated() {
   return Boolean(
     localStorage.getItem(
-      "cybersentinel_token"
+      "threatlens_token"
+    ) ||
+    localStorage.getItem(
+      "access_token"
     )
   );
-}
+};
+
+
+export const getCurrentUser =
+  async () => {
+
+    try {
+
+      const response =
+        await api.get(
+          "/auth/me"
+        );
+
+      return response.data;
+
+    } catch (error) {
+
+      throw new Error(
+        getErrorMessage(
+          error,
+          "Unable to load current user."
+        )
+      );
+    }
+  };
+
+
+// =========================
+// INCIDENTS
+// =========================
+
+export const getIncidents =
+  async () => {
+
+    try {
+
+      const response =
+        await api.get(
+          "/incidents/"
+        );
+
+      return response.data;
+
+    } catch (error) {
+
+      throw new Error(
+        getErrorMessage(
+          error,
+          "Unable to load incidents."
+        )
+      );
+    }
+  };
+
+
+export const getIncident =
+  async (incidentId) => {
+
+    try {
+
+      const response =
+        await api.get(
+          `/incidents/${incidentId}`
+        );
+
+      return response.data;
+
+    } catch (error) {
+
+      throw new Error(
+        getErrorMessage(
+          error,
+          "Unable to load incident."
+        )
+      );
+    }
+  };
+
+
+export const createIncident =
+  async (incidentData) => {
+
+    try {
+
+      const response =
+        await api.post(
+          "/incidents/",
+          incidentData
+        );
+
+      return response.data;
+
+    } catch (error) {
+
+      throw new Error(
+        getErrorMessage(
+          error,
+          "Unable to create incident."
+        )
+      );
+    }
+  };
+
+
+export const updateIncident =
+  async (
+    incidentId,
+    incidentData
+  ) => {
+
+    try {
+
+      const response =
+        await api.put(
+          `/incidents/${incidentId}`,
+          incidentData
+        );
+
+      return response.data;
+
+    } catch (error) {
+
+      throw new Error(
+        getErrorMessage(
+          error,
+          "Unable to update incident."
+        )
+      );
+    }
+  };
+
+
+export const deleteIncident =
+  async (incidentId) => {
+
+    try {
+
+      const response =
+        await api.delete(
+          `/incidents/${incidentId}`
+        );
+
+      return response.data;
+
+    } catch (error) {
+
+      throw new Error(
+        getErrorMessage(
+          error,
+          "Unable to delete incident."
+        )
+      );
+    }
+  };
+
+
+// =========================
+// AI ANALYSIS
+// =========================
+
+export const analyzeIncident =
+  async (incidentId) => {
+
+    try {
+
+      const response =
+        await api.post(
+          `/incidents/${incidentId}/analyze`
+        );
+
+      return response.data;
+
+    } catch (error) {
+
+      throw new Error(
+        getErrorMessage(
+          error,
+          "AI analysis failed."
+        )
+      );
+    }
+  };
+
+
+// =========================
+// AI AGENT
+// =========================
+
+export const runAgent =
+  async (incidentId) => {
+
+    try {
+
+      const response =
+        await api.post(
+          `/incidents/${incidentId}/agent-run`
+        );
+
+      return response.data;
+
+    } catch (error) {
+
+      throw new Error(
+        getErrorMessage(
+          error,
+          "AI agent execution failed."
+        )
+      );
+    }
+  };
+
+
+export const runIncidentAgent =
+  runAgent;
+
+
+// =========================
+// HEALTH CHECK
+// =========================
+
+export const healthCheck =
+  async () => {
+
+    try {
+
+      const response =
+        await api.get(
+          "/health"
+        );
+
+      return response.data;
+
+    } catch (error) {
+
+      throw new Error(
+        getErrorMessage(
+          error,
+          "Backend health check failed."
+        )
+      );
+    }
+  };
+
+
+export default api;

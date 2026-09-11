@@ -44,7 +44,7 @@ function AppContent() {
         <div className="loading-spinner" />
 
         <p>
-          Loading CyberSentinel AI...
+          Loading ThreatLens AI
         </p>
       </div>
     );

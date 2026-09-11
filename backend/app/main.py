@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import Base, engine
 
+# Import models before creating database tables
 from app.models import (
     User,
     Incident,
@@ -11,48 +12,38 @@ from app.models import (
     AgentRun,
 )
 
-from app.routes.auth import (
-    router as auth_router,
-)
-
-from app.routes.incident import (
-    router as incident_router,
-)
-
-from app.routes.analysis import (
-    router as analysis_router,
-)
-
-from app.routes.analytics import (
-    router as analytics_router,
-)
+# Routes
+from app.routes.auth import router as auth_router
+from app.routes.incident import router as incident_router
+from app.routes.analysis import router as analysis_router
+from app.routes.analytics import router as analytics_router
 
 
-# =========================
+# ============================================================
 # DATABASE INITIALIZATION
-# =========================
+# ============================================================
 
 Base.metadata.create_all(bind=engine)
 
 
-# =========================
+# ============================================================
 # FASTAPI APPLICATION
-# =========================
+# ============================================================
 
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description=(
-        "CyberSentinel AI - "
-        "AI-powered cybersecurity "
-        "incident response platform."
+        "ThreatLens AI - "
+        "AI-powered cybersecurity incident "
+        "analysis and response platform."
     ),
 )
 
 
-# =========================
-# CORS
-# =========================
+# ============================================================
+# CORS CONFIGURATION
+# ============================================================
 
 allowed_origins = [
     "http://localhost:5173",
@@ -75,9 +66,9 @@ app.add_middleware(
 )
 
 
-# =========================
-# ROUTES
-# =========================
+# ============================================================
+# API ROUTES
+# ============================================================
 
 app.include_router(auth_router)
 app.include_router(incident_router)
@@ -85,26 +76,28 @@ app.include_router(analysis_router)
 app.include_router(analytics_router)
 
 
-# =========================
-# ROOT
-# =========================
+# ============================================================
+# ROOT ENDPOINT
+# ============================================================
 
 @app.get("/")
 def root():
     return {
-        "name": settings.APP_NAME,
+        "name": "ThreatLens AI",
         "version": settings.APP_VERSION,
         "status": "online",
+        "message": "ThreatLens AI backend is running",
     }
 
 
-# =========================
+# ============================================================
 # HEALTH CHECK
-# =========================
+# ============================================================
 
 @app.get("/health")
 def health():
     return {
         "status": "healthy",
         "database": "connected",
+        "service": "ThreatLens AI",
     }

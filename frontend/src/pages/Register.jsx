@@ -83,7 +83,7 @@ function Register({
           </div>
 
           <p className="eyebrow">
-            CYBERSENTINEL AI
+            ThreatLens AI
           </p>
 
           <h1>
@@ -114,7 +114,7 @@ function Register({
         <div className="auth-form">
 
           <div className="mobile-brand">
-            🛡 CyberSentinel AI
+            🛡 ThreatLens AI
           </div>
 
           <p className="eyebrow">

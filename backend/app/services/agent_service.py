@@ -9,7 +9,7 @@ def run_incident_response_agent(
     description: str,
 ) -> dict[str, Any]:
     """
-    CyberSentinel AI incident-response agent.
+    ThreatLens AI incident-response agent.
 
     Agent workflow:
 
@@ -121,7 +121,7 @@ def run_incident_response_agent(
             "status": "completed",
             "description": (
                 "Relevant cybersecurity knowledge retrieved "
-                "from the CyberSentinel knowledge base."
+                "from the ThreatLens AI knowledge base."
             ),
         },
         {

@@ -16,74 +16,101 @@ const AuthContext =
   createContext(null);
 
 
+function readStoredUser() {
+
+  const saved =
+    localStorage.getItem(
+      "threatlens_user"
+    );
+
+
+  if (!saved) {
+    return null;
+  }
+
+
+  try {
+
+    return JSON.parse(saved);
+
+  } catch {
+
+    localStorage.removeItem(
+      "threatlens_user"
+    );
+
+    return null;
+  }
+}
+
+
 export function AuthProvider({
   children,
 }) {
+
   const [user, setUser] =
-    useState(() => {
-      const saved =
-        localStorage.getItem(
-          "cybersentinel_user"
-        );
+    useState(readStoredUser);
 
-      if (!saved) {
-        return null;
-      }
-
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return null;
-      }
-    });
 
   const [loading, setLoading] =
     useState(
       Boolean(
         localStorage.getItem(
-          "cybersentinel_token"
+          "threatlens_token"
         )
       )
     );
 
 
   useEffect(() => {
+
     const token =
       localStorage.getItem(
-        "cybersentinel_token"
+        "threatlens_token"
       );
 
+
     if (!token) {
+
       setLoading(false);
       return;
     }
 
+
     getCurrentUser()
+
       .then((currentUser) => {
+
         setUser(currentUser);
 
         localStorage.setItem(
-          "cybersentinel_user",
+          "threatlens_user",
           JSON.stringify(currentUser)
         );
       })
+
       .catch(() => {
+
         logout();
         setUser(null);
       })
+
       .finally(() => {
+
         setLoading(false);
       });
+
   }, []);
 
 
   function setAuthenticatedUser(
     userData
   ) {
+
     setUser(userData);
 
     localStorage.setItem(
-      "cybersentinel_user",
+      "threatlens_user",
       JSON.stringify(userData)
     );
   }
@@ -93,20 +120,25 @@ export function AuthProvider({
     username,
     password
   ) {
-    const data = await login(
-      username,
-      password
-    );
+
+    const data =
+      await login(
+        username,
+        password
+      );
+
 
     setAuthenticatedUser(
       data.user
     );
+
 
     return data;
   }
 
 
   function signOut() {
+
     logout();
     setUser(null);
   }
@@ -129,14 +161,18 @@ export function AuthProvider({
 
 
 export function useAuth() {
+
   const context =
     useContext(AuthContext);
 
+
   if (!context) {
+
     throw new Error(
       "useAuth must be used inside AuthProvider"
     );
   }
+
 
   return context;
 }

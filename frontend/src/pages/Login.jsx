@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { login } from "../services/api";
 
 
@@ -6,6 +7,7 @@ function Login({
   onLogin,
   onRegister,
 }) {
+
   const [username, setUsername] =
     useState("");
 
@@ -20,25 +22,32 @@ function Login({
 
 
   async function handleSubmit(event) {
+
     event.preventDefault();
 
     setError("");
     setLoading(true);
 
+
     try {
-      const data = await login(
-        username,
-        password
-      );
+
+      const data =
+        await login(
+          username.trim(),
+          password
+        );
 
       onLogin(data);
 
     } catch (err) {
+
       setError(
         err.message ||
         "Unable to sign in."
       );
+
     } finally {
+
       setLoading(false);
     }
   }
@@ -57,9 +66,11 @@ function Login({
             🛡
           </div>
 
+
           <p className="eyebrow">
             AI-POWERED SECURITY
           </p>
+
 
           <h1>
             Detect threats.
@@ -67,17 +78,29 @@ function Login({
             Respond faster.
           </h1>
 
+
           <p>
-            CyberSentinel AI helps security
+            ThreatLens AI helps security
             teams analyze incidents, retrieve
             relevant intelligence, and generate
             defensive response plans.
           </p>
 
+
           <div className="hero-features">
-            <span>✓ AI Threat Analysis</span>
-            <span>✓ RAG Intelligence</span>
-            <span>✓ Automated Response Planning</span>
+
+            <span>
+              ✓ AI Threat Analysis
+            </span>
+
+            <span>
+              ✓ RAG Intelligence
+            </span>
+
+            <span>
+              ✓ Automated Response Planning
+            </span>
+
           </div>
 
         </div>
@@ -90,16 +113,19 @@ function Login({
         <div className="auth-form">
 
           <div className="mobile-brand">
-            🛡 CyberSentinel AI
+            🛡 ThreatLens AI
           </div>
+
 
           <p className="eyebrow">
             SECURITY OPERATIONS
           </p>
 
+
           <h2>
             Welcome back
           </h2>
+
 
           <p className="auth-subtitle">
             Sign in to your security
@@ -122,15 +148,14 @@ function Login({
               <input
                 type="text"
                 value={username}
-                onChange={(e) =>
+                onChange={(event) =>
                   setUsername(
-                    e.target.value
+                    event.target.value
                   )
                 }
                 placeholder="Enter username"
                 required
               />
-
             </label>
 
 
@@ -140,15 +165,14 @@ function Login({
               <input
                 type="password"
                 value={password}
-                onChange={(e) =>
+                onChange={(event) =>
                   setPassword(
-                    e.target.value
+                    event.target.value
                   )
                 }
                 placeholder="Enter password"
                 required
               />
-
             </label>
 
 
@@ -166,6 +190,7 @@ function Login({
 
 
           <p className="auth-switch">
+
             Don't have an account?
 
             <button
@@ -173,6 +198,7 @@ function Login({
             >
               Create account
             </button>
+
           </p>
 
         </div>
@@ -182,5 +208,6 @@ function Login({
     </div>
   );
 }
+
 
 export default Login;

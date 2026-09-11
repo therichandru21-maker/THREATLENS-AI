@@ -153,7 +153,7 @@ function Dashboard({
 
           <div className="ai-banner-title">
             <strong>
-              CyberSentinel AI Engine
+              ThreatLens AI
             </strong>
 
             <span className="online-pill">

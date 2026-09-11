@@ -96,7 +96,7 @@ function NewIncident({
 
           <p>
             Provide the incident details and
-            CyberSentinel AI will investigate
+            ThreatLens AI investigate
             the event using its AI agent and
             cybersecurity knowledge base.
           </p>
@@ -271,7 +271,7 @@ function NewIncident({
           </h2>
 
           <p>
-            CyberSentinel AI automatically
+            ThreatLens AI automatically
             orchestrates the investigation.
           </p>
 

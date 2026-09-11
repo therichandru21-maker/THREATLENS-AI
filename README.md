@@ -1,10 +1,10 @@
-# CyberSentinel AI
+# ThreatLens AI
 
 AI-Powered Cybersecurity Incident Response Platform.
 
 ## Project
 
-CyberSentinel AI analyzes cybersecurity incidents using Generative AI,
+ThreatLens AIalyzes cybersecurity incidents using Generative AI,
 Retrieval-Augmented Generation (RAG), and an AI Agent workflow.
 
 ## Core Features
